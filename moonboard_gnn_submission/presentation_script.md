@@ -106,8 +106,8 @@ Accuracy는 sample 수가 많은 class의 영향을 크게 받습니다. MoonBoa
 
 **English**
 
-Our first experiments used simpler GAT-based models focused on graph structure, node features, and spatial edges. Those models were useful as graph baselines, but they did not clearly outperform the reported MoonBoardRNN result. To improve performance, we added a dense branch that uses problem-level metadata and statistics provided in the dataset, such as setter information, benchmark status, repeat count, and train-only relation summaries. The final model concatenates the graph embedding and the dense embedding before classification.
+Our first experiments used simpler GAT-based models focused on graph structure, node features, and spatial edges. Those models were useful as graph baselines, but they did not clearly outperform the reported MoonBoardRNN result. To improve performance, we added a dense branch for information that is given per problem but is not naturally represented as graph message passing. This branch standardizes those numerical features and passes them through a small MLP, producing a dense embedding `dh`. In other words, the graph branch learns structural information from hold-to-hold relations, while the dense branch learns from global problem-level signals.
 
 **Korean**
 
-처음 실험에서는 graph structure, node feature, spatial edge에 집중한 단순한 GAT 기반 모델을 사용했습니다. 이 모델들은 graph baseline으로는 의미가 있었지만, 비교 대상인 MoonBoardRNN의 reported result를 명확히 뛰어넘지는 못했습니다. 그래서 성능을 더 끌어올리기 위해 dataset에 제공된 problem-level metadata/statistics도 dense branch로 추가했습니다. 여기에는 setter 정보, benchmark 여부, repeat count, train-only relation summary 등이 포함됩니다. 최종 모델은 graph embedding과 dense embedding을 concat한 뒤 classification을 수행합니다.
+처음 실험에서는 graph structure, node feature, spatial edge에 집중한 단순한 GAT 기반 모델을 사용했습니다. 이 모델들은 graph baseline으로는 의미가 있었지만, 비교 대상인 MoonBoardRNN의 reported result를 명확히 뛰어넘지는 못했습니다. 그래서 성능을 더 끌어올리기 위해, graph message passing으로 자연스럽게 표현되기 어려운 problem-level 정보는 별도의 dense branch로 처리했습니다. 이 branch에서는 numerical feature들을 standardize한 뒤 작은 MLP에 통과시켜 dense embedding `dh`를 만듭니다. 즉 graph branch는 hold-to-hold relation에서 구조적 정보를 학습하고, dense branch는 문제 전체에 대한 global signal을 학습합니다.
