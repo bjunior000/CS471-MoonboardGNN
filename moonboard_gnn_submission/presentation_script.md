@@ -6,15 +6,15 @@ Hello, our project is about difficulty prediction of MoonBoard climbing problems
 
 A MoonBoard problem is defined by a set of selected holds on a fixed climbing board. Its difficulty is not determined only by which holds are used, but also by their positions, their roles, and the movement relations between them. So in this project, we represent each MoonBoard problem as a graph and learn a graph embedding for grade prediction.
 
-The task is graph classification. The input is one MoonBoard problem with start, middle, and end holds, plus problem-level metadata such as setter ID, benchmark flag, and repeat count. Each hold has a board position and role information. The output is a discrete difficulty grade, such as 6A+ or 7B. In the graph, nodes are holds, edges are spatially reachable hold-to-hold relations, and edge attributes describe relative position, distance, direction, and relation statistics.
+We treat this task as graph classification. The input is one MoonBoard problem with start, middle, and end holds, plus problem-level metadata such as setter ID, benchmark flag, and repeat count. Each hold has a board position and role information. The output is a discrete difficulty grade, such as 6A+ or 7B. In the graph, nodes are holds, edges are spatially reachable hold-to-hold relations, and edge attributes describe relative position, distance, direction, and relation statistics.
 
-There are two related existing approaches. MoonBoardRNN first infers a move sequence using BetaMove, and then uses an LSTM-based GradeNet to predict difficulty from move-level features. Another approach, MoonGen or TextGCN-style GNN, builds one global graph from the entire dataset, where problems and holds are nodes, and edges represent occurrence or co-occurrence relations.
+There are two related existing approaches. MoonBoardRNN first infers a move sequence using BetaMove, and then uses an LSTM-based GradeNet to predict difficulty from move-level features. Another approach, MoonGen or TextGCN-style GNN, builds one global heterogeneous graph from the entire dataset. In that graph, problem nodes are connected to the holds included in each problem, and hold nodes are connected based on how often they appear together in the same problems.
 
 Our approach is different because we construct a separate physical graph for each MoonBoard problem. Holds are nodes, possible movement relations are edges, and edge attributes describe how two holds are spatially related. The key idea is that the model should not only know that two holds are connected, but also what kind of movement relation that edge represents.
 
-The model has two branches. In the graph branch, the hold graph is passed into Edge-Aware GAT layers. These layers update hold embeddings using both node features and edge attributes. Then mean and max graph pooling produce a graph-level representation, and a graph head MLP transforms it into the graph embedding `gh`.
+The model has two branches. In the graph branch, the hold graph is passed into Edge-Aware GAT layers. The node features include examples such as hold position and hold role, while the edge attributes include relative distance, direction, and relation statistics. The GAT layers update hold embeddings using both node and edge information. Then mean and max graph pooling produce a graph-level summary, and a graph head MLP transforms it into the graph embedding `gh`.
 
-In the dense branch, problem-level metadata and statistics are standardized and passed through another MLP, producing a dense embedding `dh`. Then `gh` and `dh` are concatenated and passed to a final MLP classifier. The output is grade logits, and the predicted grade is the class with the highest logit.
+In the dense branch, problem-level metadata and statistics are standardized and passed through another MLP, producing a dense embedding `dh`. Then `gh` and `dh` are concatenated and passed to a final MLP classifier. The output is class scores, or logits, and the predicted grade is the class with the highest score.
 
 For training, we used cross entropy loss for grade classification, plus an ordinal loss that penalizes larger grade-index errors. This is useful because difficulty grades are ordered. For evaluation, we used exact accuracy, within-1 accuracy, and macro-F1.
 
@@ -26,15 +26,15 @@ The result shows that Edge-Aware GAT improves over vanilla GAT and also improves
 
 MoonBoard 문제는 고정된 클라이밍 보드 위에서 선택된 홀드들의 집합으로 정의됩니다. 그런데 난이도는 단순히 어떤 홀드가 쓰였는지만으로 결정되지 않고, 홀드의 위치, start/middle/end 같은 역할, 그리고 홀드 사이의 이동 관계에도 영향을 받습니다. 그래서 저희는 각 MoonBoard 문제를 그래프로 표현하고, 그 graph embedding을 이용해서 난이도 grade를 예측했습니다.
 
-문제는 graph classification으로 정의했습니다. 입력은 start, middle, end hold를 가진 하나의 MoonBoard problem이고, 여기에 setter ID, benchmark 여부, repeat count 같은 problem-level metadata도 포함됩니다. 출력은 6A+, 7B 같은 discrete difficulty grade입니다. 그래프에서 node는 각 hold이고, edge는 공간적으로 도달 가능한 hold-to-hold 관계입니다. edge attribute에는 상대 위치, 거리, 방향, relation statistics 같은 정보가 들어갑니다.
+저희는 이 작업을 graph classification 문제로 보았습니다. 입력은 start, middle, end hold를 가진 하나의 MoonBoard problem이고, 여기에 setter ID, benchmark 여부, repeat count 같은 problem-level metadata도 포함됩니다. 출력은 6A+, 7B 같은 discrete difficulty grade입니다. 그래프에서 node는 각 hold이고, edge는 공간적으로 도달 가능한 hold-to-hold 관계입니다. edge attribute에는 상대 위치, 거리, 방향, relation statistics 같은 정보가 들어갑니다.
 
-관련된 기존 접근은 두 가지가 있습니다. 첫 번째는 MoonBoardRNN입니다. 이 방법은 BetaMove로 move sequence를 먼저 추정한 뒤, LSTM 기반 GradeNet으로 move-level feature에서 난이도를 예측합니다. 두 번째는 MoonGen, 또는 TextGCN-style GNN입니다. 이 방법은 전체 dataset을 하나의 global graph로 만들고, problem node와 hold node 사이의 occurrence, co-occurrence 관계를 이용합니다.
+관련된 기존 접근은 두 가지가 있습니다. 첫 번째는 MoonBoardRNN입니다. 이 방법은 BetaMove로 move sequence를 먼저 추정한 뒤, LSTM 기반 GradeNet으로 move-level feature에서 난이도를 예측합니다. 두 번째는 MoonGen, 또는 TextGCN-style GNN입니다. 이 방법은 전체 dataset을 하나의 global heterogeneous graph로 만들고, 각 problem node를 그 문제에 포함된 hold node와 연결합니다. 또 hold node끼리는 같은 문제 안에서 함께 등장하는 빈도를 바탕으로 연결됩니다.
 
-저희 접근의 차이는 각 문제마다 별도의 physical graph를 만든다는 점입니다. 즉 전체 데이터셋 graph가 아니라, 하나의 MoonBoard problem 자체를 graph classification sample로 봅니다. 그리고 edge가 단순히 연결 여부만 나타내는 것이 아니라, 두 홀드 사이가 어떤 이동 관계를 가지는지도 표현하도록 했습니다.
+저희 접근의 차이는 각 문제마다 별도의 physical graph를 만든다는 점입니다. 즉 전체 데이터셋 graph가 아니라, 하나의 MoonBoard problem 자체를 graph classification sample로 봅니다. 그리고 edge가 단순히 연결 여부만 나타내는 것이 아니라, 두 hold 사이가 어떤 이동 관계를 가지는지도 표현하도록 했습니다.
 
-모델은 두 branch로 구성됩니다. graph branch에서는 problem graph가 Edge-Aware GAT layer를 통과합니다. 이 layer는 node feature뿐 아니라 edge attribute도 사용해서 hold embedding을 업데이트합니다. 이후 mean pooling과 max pooling으로 graph-level representation을 만들고, graph head MLP를 통해 graph embedding `gh`를 만듭니다.
+모델은 두 branch로 구성됩니다. graph branch에서는 problem graph가 Edge-Aware GAT layer를 통과합니다. node feature에는 hold 위치와 hold role 같은 정보가 들어가고, edge attribute에는 상대 거리, 방향, relation statistics 같은 정보가 들어갑니다. 이 GAT layer는 node 정보와 edge 정보를 함께 사용해서 hold embedding을 업데이트합니다. 이후 mean pooling과 max pooling으로 graph-level summary를 만들고, graph head MLP를 통해 graph embedding `gh`를 만듭니다.
 
-dense branch에서는 problem-level metadata와 statistics를 standardized feature로 만든 뒤, dense head MLP를 통과시켜 dense embedding `dh`를 만듭니다. 마지막으로 `gh`와 `dh`를 concat하고, final MLP classifier가 difficulty grade logits를 출력합니다. 예측 grade는 가장 logit이 큰 class입니다.
+dense branch에서는 problem-level metadata와 statistics를 standardized feature로 만든 뒤, dense head MLP를 통과시켜 dense embedding `dh`를 만듭니다. 마지막으로 `gh`와 `dh`를 concat하고, final MLP classifier가 각 difficulty grade class에 대한 score를 출력합니다. 예측 grade는 score가 가장 높은 class입니다.
 
 학습에는 grade classification을 위한 cross entropy loss와, grade 순서성을 반영하기 위한 ordinal loss를 함께 사용했습니다. 평가는 exact accuracy, within-1 accuracy, macro-F1으로 진행했습니다.
 
@@ -111,3 +111,13 @@ Our first experiments used simpler GAT-based models focused on graph structure, 
 **Korean**
 
 처음 실험에서는 graph structure, node feature, spatial edge에 집중한 단순한 GAT 기반 모델을 사용했습니다. 이 모델들은 graph baseline으로는 의미가 있었지만, 비교 대상인 MoonBoardRNN의 reported result를 명확히 뛰어넘지는 못했습니다. 그래서 성능을 더 끌어올리기 위해, graph message passing으로 자연스럽게 표현되기 어려운 problem-level 정보는 별도의 dense branch로 처리했습니다. 이 branch에서는 numerical feature들을 standardize한 뒤 작은 MLP에 통과시켜 dense embedding `dh`를 만듭니다. 즉 graph branch는 hold-to-hold relation에서 구조적 정보를 학습하고, dense branch는 문제 전체에 대한 global signal을 학습합니다.
+
+### 8. What is the graph head MLP?
+
+**English**
+
+The graph head MLP is not another graph neural network layer. After the Edge-Aware GAT updates node embeddings, mean pooling and max pooling summarize all hold embeddings into a fixed-size graph-level vector. The graph head MLP then transforms this pooled vector into the final graph embedding `gh`. Its role is to combine the mean and max pooled summaries and project them into a representation that is useful for grade classification.
+
+**Korean**
+
+Graph head MLP는 추가적인 graph neural network layer는 아닙니다. Edge-Aware GAT가 node embedding을 업데이트한 뒤, mean pooling과 max pooling으로 모든 hold embedding을 고정된 크기의 graph-level vector로 요약합니다. Graph head MLP는 이 pooled vector를 최종 graph embedding `gh`로 변환합니다. 즉 mean/max pooling 결과를 섞고, grade classification에 더 적합한 representation으로 projection하는 역할을 합니다.
