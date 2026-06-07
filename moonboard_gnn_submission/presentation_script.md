@@ -101,3 +101,13 @@ Accuracy can be dominated by frequent grade classes. In the MoonBoard dataset, l
 **Korean**
 
 Accuracy는 sample 수가 많은 class의 영향을 크게 받습니다. MoonBoard dataset에서는 낮은 난이도와 중간 난이도 class가 많고, 높은 난이도 class는 상대적으로 적습니다. 그래서 모델이 흔한 class만 잘 맞춰도 accuracy는 괜찮게 나올 수 있지만, rare class에서는 성능이 낮을 수 있습니다. Macro-F1은 각 class별 F1을 따로 계산한 뒤 동일한 비중으로 평균내기 때문에 rare class가 무시되지 않습니다. 따라서 macro-F1은 모델이 전체 grade distribution에서 얼마나 균형 있게 작동하는지를 확인하는 데 유용합니다.
+
+### 7. Why does the final model have two branches?
+
+**English**
+
+Our first experiments used simpler GAT-based models that focused mainly on graph structure, node features, and spatial edges, without using the full set of problem-level metadata. Those models were useful as graph baselines, but they did not clearly outperform the reported MoonBoardRNN result. Since MoonBoardRNN also uses rich engineered information rather than only raw holds, we decided that a fairer and stronger model should also use the information provided in the dataset. Therefore, the final model keeps the graph branch as the main representation learner, but adds a dense branch for problem-level metadata and statistics such as setter information, benchmark status, repeat count, and train-only relation summaries. These two representations are concatenated and classified together.
+
+**Korean**
+
+처음 실험에서는 주로 graph structure, node feature, spatial edge에 집중한 단순한 GAT 기반 모델을 사용했고, problem-level metadata 전체를 적극적으로 사용하지는 않았습니다. 이 모델들은 graph baseline으로는 의미가 있었지만, 비교 대상인 MoonBoardRNN의 reported result를 명확히 뛰어넘지는 못했습니다. 그런데 MoonBoardRNN도 raw hold 정보만 쓰는 것이 아니라 move-level engineered feature를 많이 활용합니다. 그래서 더 공정하고 강한 모델을 만들기 위해 dataset에 제공된 problem-level 정보도 함께 활용하는 방향으로 확장했습니다. 최종 모델에서는 graph branch가 여전히 중심 representation을 학습하지만, setter 정보, benchmark 여부, repeat count, train-only relation summary 같은 problem-level metadata/statistics를 dense branch의 MLP에 넣어 함께 사용합니다. 마지막에는 두 representation을 concat해서 classification을 수행합니다.
