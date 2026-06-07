@@ -18,7 +18,7 @@ In the dense branch, problem-level metadata and statistics are standardized and 
 
 For training, we used cross entropy loss for grade classification, plus an ordinal loss that penalizes larger grade-index errors. This is useful because difficulty grades are ordered. For evaluation, we used exact accuracy, within-1 accuracy, and macro-F1.
 
-The result shows that Edge-Aware GAT improves over vanilla GAT and also improves exact accuracy compared with the reported MoonBoardRNN result. The Edge-Aware GAT achieved about 0.508 exact accuracy, 0.851 within-1 accuracy, and 0.304 macro-F1. The macro-F1 improvement suggests that edge-aware movement information helps the model classify grades more effectively. However, high-grade classes still have fewer samples and remain difficult to predict, so overcoming class imbalance in the provided dataset can be a future direction.
+The result shows that Edge-Aware GAT improves over vanilla GAT and also improves exact accuracy compared with the reported MoonBoardRNN result. The Edge-Aware GAT achieved about 0.508 exact accuracy, 0.851 within-1 accuracy, and 0.304 macro-F1. The macro-F1 improvement suggests that edge-aware movement information, such as relative hold distance, direction, and relation statistics, helps the model classify grades more effectively. However, high-grade classes still have fewer samples and remain difficult to predict, so overcoming class imbalance in the provided dataset can be a future direction.
 
 ## Korean Script
 
@@ -38,7 +38,7 @@ dense branch에서는 problem-level metadata와 statistics를 standardized featu
 
 학습에는 grade classification을 위한 cross entropy loss와, grade 순서성을 반영하기 위한 ordinal loss를 함께 사용했습니다. 평가는 exact accuracy, within-1 accuracy, macro-F1으로 진행했습니다.
 
-결과적으로 Edge-Aware GAT는 vanilla GAT보다 성능이 좋았고, MoonBoardRNN의 reported exact accuracy보다도 높은 exact accuracy를 보였습니다. Edge-Aware GAT는 exact accuracy 약 0.508, within-1 accuracy 약 0.851, macro-F1 약 0.304를 기록했습니다. 특히 macro-F1이 개선된 것은 edge-aware movement relation이 grade prediction에 도움이 된다는 근거로 볼 수 있습니다. 다만 높은 난이도 class는 데이터 수가 적어서 여전히 예측이 어렵고, 제공된 dataset의 class imbalance를 극복하는 것이 추후 과제가 될 수 있겠습니다.
+결과적으로 Edge-Aware GAT는 vanilla GAT보다 성능이 좋았고, MoonBoardRNN의 reported exact accuracy보다도 높은 exact accuracy를 보였습니다. Edge-Aware GAT는 exact accuracy 약 0.508, within-1 accuracy 약 0.851, macro-F1 약 0.304를 기록했습니다. 특히 macro-F1이 개선된 것은 edge-aware movement relation, 즉 두 hold 사이의 상대 거리, 방향, relation statistics 같은 edge 정보가 grade prediction에 도움이 된다는 근거로 볼 수 있습니다. 다만 높은 난이도 class는 데이터 수가 적어서 여전히 예측이 어렵고, 제공된 dataset의 class imbalance를 극복하는 것이 추후 과제가 될 수 있겠습니다.
 
 ## Additional Explanations / Expected Questions
 
